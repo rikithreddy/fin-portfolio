@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  BarChart3, 
-  Search, 
-  Database, 
-  ArrowRight, 
-  Linkedin, 
-  Github, 
-  Mail, 
-  Menu, 
+import {
+  BarChart3,
+  Search,
+  Database,
+  ArrowRight,
+  Linkedin,
+  Github,
+  Mail,
+  Menu,
   X,
   CheckCircle2,
   TrendingUp,
@@ -20,7 +20,19 @@ import {
   FileText,
   ArrowUpRight
 } from 'lucide-react';
-//  photo from './assets/photo.png';
+import { loadAllBlogs } from './utils/blogLoader';
+
+// Icon mapping for blog posts
+const ICON_MAP = {
+  search: Search,
+  activity: Activity,
+  zap: Zap,
+  database: Database,
+  barchart: BarChart3,
+  trendingup: TrendingUp,
+  user: User,
+  filetext: FileText
+};
 
 // --- D3.js Helper for React ---
 const useD3Script = () => {
@@ -137,84 +149,48 @@ const D3NetworkBackground = () => {
   );
 };
 
+/**
+ * Helper function to get the icon component for a blog post.
+ */
+const getIconForBlog = (iconType, iconColor) => {
+  const IconComponent = ICON_MAP[iconType] || Search;
+  return <IconComponent className={iconColor} size={24} />;
+};
+
 const Portfolio = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeView, setActiveView] = useState('home'); 
+  const [activeView, setActiveView] = useState('home');
   const [selectedStory, setSelectedStory] = useState(null);
+  const [stories, setStories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load blog posts from markdown files
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      setIsLoading(true);
+      try {
+        const blogs = await loadAllBlogs();
+        // Transform blogs to include icon components
+        const transformedBlogs = blogs.map(blog => ({
+          ...blog,
+          icon: getIconForBlog(blog.iconType, blog.iconColor)
+        }));
+        setStories(transformedBlogs);
+      } catch (error) {
+        console.error('Failed to load blogs:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   // THEME: CALM FINTECH
   // BG: White / Slate-50
   // TEXT: Slate-800 (Charcoal) for readability
   // PRIMARY ACCENT: Sky-600 (Trust Blue)
   // SECONDARY ACCENT: Emerald-500 (Growth/Money)
-
-  const stories = [
-    {
-      id: 1,
-      title: "The $500 Anomaly: Hidden Fuel Charges",
-      date: "Oct 12, 2023",
-      category: "Forensic Audit",
-      preview: "How a 0.5% variance in fuel surcharges compounded into a measurable loss over 12 months.",
-      metric: "Recovered ₹500",
-      tagStyle: "bg-red-50 text-red-600 border-red-100",
-      icon: <Search className="text-red-500" size={24} />,
-      image: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      content: `
-# The Fuel Surcharge Leak
-
-While analyzing credit card statements for a beta client, my anomaly detection script flagged a repeating decimal pattern in fuel transactions.
-
-## The Pattern
-Most fuel stations waive the 1% surcharge. However, one specific station chain was applying a "dynamic currency conversion" fee erroneously labeled as a surcharge.
-
-**Result:** A quick dispute raised with the bank recovered the funds. Small leaks sink great ships.
-      `
-    },
-    {
-      id: 2,
-      title: "The 20.3% December Spike",
-      date: "Dec 20, 2023",
-      category: "Behavioral",
-      preview: "Isolating seasonal spending vectors. Why 3 days in December outweighed 11 months of entertainment costs.",
-      metric: "20.3% Variance",
-      tagStyle: "bg-purple-50 text-purple-600 border-purple-100",
-      icon: <Activity className="text-purple-500" size={24} />,
-      image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      content: `
-# The December Spike
-
-Context is the difference between "overspending" and "living". 
-
-I noticed a massive spike in the "Entertainment" cluster. A generic app would flag this as "Poor Financial Health".
-
-## Contextual Analysis
-By overlaying calendar data, I confirmed these 3 days correlated with a milestone birthday event. 
-**Insight:** This wasn't a habit; it was an outlier event. My models now account for "Celebration Exclusion" to avoid false positives in budget alerts.
-      `
-    },
-    {
-      id: 3,
-      title: "Subscription Creep: The Silent Killer",
-      date: "Nov 05, 2023",
-      category: "Optimization",
-      preview: "Detecting 'Zombie Subscriptions'—services that are auto-renewing but have 0 usage logs.",
-      metric: "$240/yr Saved",
-      tagStyle: "bg-emerald-50 text-emerald-600 border-emerald-100",
-      icon: <Zap className="text-emerald-500" size={24} />,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      content: `
-# Zombie Subscriptions
-
-I built a 'Usage vs Cost' ratio analysis. 
-If (Cost > 0) AND (Digital Footprint == 0) THEN Flag.
-
-## Findings
-My client was paying for a premium delivery service they hadn't used in 8 months.
-Total annualized waste: $240.
-**Action:** Cancelled immediately.
-      `
-    }
-  ];
 
   const testimonials = [
     {
@@ -414,7 +390,16 @@ Total annualized waste: $240.
               </div>
 
               <div className="grid md:grid-cols-3 gap-8">
-                {stories.map((story, index) => (
+                {isLoading ? (
+                  <div className="col-span-3 text-center py-12">
+                    <div className="inline-block w-8 h-8 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
+                    <p className="mt-4 text-slate-500">Loading stories...</p>
+                  </div>
+                ) : stories.length === 0 ? (
+                  <div className="col-span-3 text-center py-12">
+                    <p className="text-slate-500">No stories available.</p>
+                  </div>
+                ) : stories.map((story, index) => (
                   <div 
                     key={story.id} 
                     onClick={() => openStory(story)}
