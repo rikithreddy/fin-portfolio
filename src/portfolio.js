@@ -20,6 +20,7 @@ import {
   FileText,
   ArrowUpRight
 } from 'lucide-react';
+//  photo from './assets/photo.png';
 
 // --- D3.js Helper for React ---
 const useD3Script = () => {
@@ -358,7 +359,7 @@ Total annualized waste: $240.
                      <div className="w-full h-full rounded-full overflow-hidden relative">
                         {/* PLEASE REPLACE THE SRC BELOW WITH 'image_186761.jpg' */}
                        <img 
-                         src="[https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80](https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80)" 
+                         src={`${process.env.PUBLIC_URL}/assets/photo.png`}
                          alt="Rikith Reddy" 
                          className="w-full h-full object-cover"
                        />
