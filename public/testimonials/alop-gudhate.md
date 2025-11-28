@@ -2,8 +2,8 @@
 id: 1
 name: "Alop Gudhate"
 role: "Beta Client"
-photo: ""
-linkedin: "https://www.linkedin.com/posts/alopgudhate_i-shared-my-credit-card-statement-data-of-activity-7391924885968789504-JeFN/?utm_source=share&utm_medium=member_desktop&rcm=ACoAABvlcrkBDFiB7G8PVsxvN2QDl08oVWU1B3M"
+photo: "/assets/alop.png"
+linkedin: "https://www.linkedin.com/"
 highlight: "Pattern Recognition"
 rating: 5
 date: "Nov 15, 2024"

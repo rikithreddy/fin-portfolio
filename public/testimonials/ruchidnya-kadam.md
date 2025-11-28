@@ -2,7 +2,7 @@
 id: 2
 name: "Ruchidnya Kadam"
 role: "Beta Client"
-photo: ""
+photo: "/assets/ruchi.png"
 linkedin: "https://www.linkedin.com/in/ruchidnya-kadam-20949b138/"
 highlight: "Capital Allocation"
 rating: 5
