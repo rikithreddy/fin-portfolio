@@ -2,8 +2,8 @@
 id: 2
 name: "Ruchidnya Kadam"
 role: "Beta Client"
-photo: "https://randomuser.me/api/portraits/women/44.jpg"
-linkedin: "https://www.linkedin.com/"
+photo: ""
+linkedin: "https://www.linkedin.com/in/ruchidnya-kadam-20949b138/"
 highlight: "Capital Allocation"
 rating: 5
 date: "Nov 20, 2024"
