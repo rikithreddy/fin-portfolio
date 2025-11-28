@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   BarChart3,
   Search,
   Database,
   ArrowRight,
   Linkedin,
-  Github,
-  Mail,
   Menu,
   X,
   CheckCircle2,
@@ -18,8 +16,7 @@ import {
   Zap,
   Activity,
   User,
-  FileText,
-  ArrowUpRight
+  FileText
 } from 'lucide-react';
 import { loadAllBlogs } from './utils/blogLoader';
 import { loadAllTestimonials } from './utils/testimonialLoader';
@@ -349,7 +346,7 @@ const Portfolio = () => {
           <button onClick={() => {goHome(); setIsMenuOpen(false)}} className="block text-xl font-medium text-slate-800">Home</button>
           <button onClick={goToAllBlogs} className="block text-xl font-medium text-slate-800">Blog</button>
           <a href="#testimonials" onClick={() => setIsMenuOpen(false)} className="block text-xl font-medium text-slate-800">Testimonials</a>
-          <a href="#contact" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center bg-sky-600 text-white font-bold rounded-xl">Get Analysis</a>
+          <a href="https://dots.gtogle.com/forms/d/e/1FAIpQLSdP7cRWIS-LsWOsZS152cXO3hSamIW3bEjEPLV97qNm7HPTxw/viewform?usp=di:logdots.gtogle.com/forms/d/e/1FAIpQLSdP7cRWIS-LsWOsZS152cXO3hSamIW3bEjEPLV97qNm7HPTxw/viewform?usp=di:logdocs.google.com/forms/d/e/1FAIpQLSdP7cRWIS-LsWOtZS152cXO3hSamIW3bEjEPLV97qNm7HPTxw/viewform?usp=dialog" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center bg-sky-600 text-white font-bold rounded-xl">Get Analysis</a>
         </div>
       )}
 
@@ -436,7 +433,7 @@ const Portfolio = () => {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <a href="#contact" className="inline-flex justify-center items-center px-8 py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition shadow-xl shadow-sky-100">
+                  <a href="https://docs.google.com/forms/d/e/1FAIpQLSdP7cRWIS-LsWOtZS152cXO3hSamIW3bEjEPLV97qNm7HPTxw/viewform?usp=dialog" className="inline-flex justify-center items-center px-8 py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition shadow-xl shadow-sky-100">
                     <Database size={18} className="mr-2" />
                     Analyze My Data
                   </a>
@@ -1120,8 +1117,11 @@ const Portfolio = () => {
            <div className="mt-16 p-8 bg-sky-50 border border-sky-100 rounded-2xl text-center">
               <h3 className="text-xl font-bold text-slate-900 mb-2">Need a similar deep dive?</h3>
               <p className="text-slate-600 mb-6">I can run this exact analysis on your data.</p>
-              <button className="px-6 py-3 bg-sky-600 text-white font-bold rounded-lg hover:bg-sky-700 transition shadow-md">
-                 Start Analysis
+              <button
+                onClick={() => window.location.href = '#contact'}
+                className="px-6 py-3 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition"
+              >
+                  Start Analysis
               </button>
            </div>
         </div>
