@@ -65,15 +65,28 @@ function parseFrontmatter(content) {
 }
 
 /**
+ * Get the base path for public assets.
+ * Works both in development and production (GitHub Pages subdirectory).
+ *
+ * @returns {string} The base path
+ */
+function getBasePath() {
+  // process.env.PUBLIC_URL is replaced at build time by Create React App
+  // It will be '/fin-portfolio' for GitHub Pages deployment
+  return process.env.PUBLIC_URL || '';
+}
+
+/**
  * Fetch a single blog post by filename.
- * 
+ *
  * @param {string} filename - The markdown filename
  * @returns {Promise<Object|null>} Parsed blog post or null on error
  */
 async function fetchBlogPost(filename) {
   try {
-    const basePath = process.env.PUBLIC_URL || '';
-    const response = await fetch(`${basePath}/blog/${filename}`);
+    const basePath = getBasePath();
+    const url = `${basePath}/blog/${filename}`;
+    const response = await fetch(url);
     
     if (!response.ok) {
       console.error(`Failed to fetch blog post: ${filename}`);
@@ -101,8 +114,9 @@ async function fetchBlogPost(filename) {
  */
 export async function loadAllBlogs() {
   try {
-    const basePath = process.env.PUBLIC_URL || '';
-    const manifestResponse = await fetch(`${basePath}/blog/manifest.json`);
+    const basePath = getBasePath();
+    const url = `${basePath}/blog/manifest.json`;
+    const manifestResponse = await fetch(url);
     
     if (!manifestResponse.ok) {
       console.error('Failed to fetch blog manifest');

@@ -50,15 +50,28 @@ function parseFrontmatter(content) {
 }
 
 /**
+ * Get the base path for public assets.
+ * Works both in development and production (GitHub Pages subdirectory).
+ *
+ * @returns {string} The base path
+ */
+function getBasePath() {
+  // process.env.PUBLIC_URL is replaced at build time by Create React App
+  // It will be '/fin-portfolio' for GitHub Pages deployment
+  return process.env.PUBLIC_URL || '';
+}
+
+/**
  * Fetch a single testimonial by filename.
- * 
+ *
  * @param {string} filename - The markdown filename
  * @returns {Promise<Object|null>} Parsed testimonial or null on error
  */
 async function fetchTestimonial(filename) {
   try {
-    const basePath = process.env.PUBLIC_URL || '';
-    const response = await fetch(`${basePath}/testimonials/${filename}`);
+    const basePath = getBasePath();
+    const url = `${basePath}/testimonials/${filename}`;
+    const response = await fetch(url);
     
     if (!response.ok) {
       console.error(`Failed to fetch testimonial: ${filename}`);
@@ -86,8 +99,9 @@ async function fetchTestimonial(filename) {
  */
 export async function loadAllTestimonials() {
   try {
-    const basePath = process.env.PUBLIC_URL || '';
-    const manifestResponse = await fetch(`${basePath}/testimonials/manifest.json`);
+    const basePath = getBasePath();
+    const url = `${basePath}/testimonials/manifest.json`;
+    const manifestResponse = await fetch(url);
     
     if (!manifestResponse.ok) {
       console.error('Failed to fetch testimonials manifest');
