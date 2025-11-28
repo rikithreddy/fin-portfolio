@@ -310,7 +310,62 @@ Total annualized waste: $240.
             <D3NetworkBackground />
             
             <div className="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-8 order-2 lg:order-1">
+              {/* HERO VISUAL: MOVED TO LEFT */}
+              <div className="relative order-1 lg:order-1 flex justify-center items-center">
+                 {/* Animated Glow Ring */}
+                 <div className="absolute w-[500px] h-[500px] bg-sky-100 rounded-full blur-3xl opacity-30 animate-pulse"></div>
+                 <div className="absolute w-[400px] h-[400px] bg-emerald-50 rounded-full blur-2xl opacity-40 animate-pulse delay-700"></div>
+                 
+                 {/* Main Photo Container with Orbiting Elements */}
+                 <div className="relative z-10">
+                   {/* Central Photo */}
+                   <div className="relative w-64 h-64 lg:w-80 lg:h-80 rounded-full p-2 bg-white shadow-2xl border-4 border-sky-50">
+                     <div className="w-full h-full rounded-full overflow-hidden relative">
+                       <img 
+                         src={`${process.env.PUBLIC_URL}/assets/photo.png`}
+                         alt="Rikith Reddy" 
+                         className="w-full h-full object-cover"
+                       />
+                       <div className="absolute inset-0 rounded-full border-[6px] border-sky-500/10 animate-[spin_12s_linear_infinite]"></div>
+                     </div>
+                   </div>
+
+                   {/* Floating Data Point 1: Anomaly (Top Right) */}
+                   <div className="absolute -top-4 -right-12 bg-white p-4 rounded-2xl shadow-lg border border-red-50 animate-[bounce_3s_infinite]">
+                     <div className="flex items-center space-x-3">
+                       <div className="p-2 bg-red-50 text-red-500 rounded-lg">
+                         <Activity size={20} />
+                       </div>
+                       <div>
+                         <div className="text-xs font-bold text-red-500 uppercase">Anomaly Detected</div>
+                         <div className="text-sm font-bold text-slate-800">$500 Duplicate</div>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Floating Data Point 2: Savings (Bottom Left) */}
+                   <div className="absolute -bottom-8 -left-8 bg-white p-4 rounded-2xl shadow-lg border border-emerald-50 animate-[bounce_4s_infinite]">
+                     <div className="flex items-center space-x-3">
+                       <div className="p-2 bg-emerald-50 text-emerald-500 rounded-lg">
+                         <TrendingUp size={20} />
+                       </div>
+                       <div>
+                         <div className="text-xs font-bold text-emerald-500 uppercase">Potential Savings</div>
+                         <div className="text-sm font-bold text-slate-800">$240/yr Found</div>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Floating Data Point 3: Security (Left) */}
+                   <div className="absolute top-1/4 -left-16 bg-white p-3 rounded-2xl shadow-md border border-sky-50 flex items-center space-x-2 animate-[pulse_5s_infinite]">
+                     <ShieldCheck size={16} className="text-sky-600" />
+                     <span className="text-xs font-bold text-sky-700">Secure & Private</span>
+                   </div>
+                 </div>
+              </div>
+
+              {/* TEXT CONTENT: MOVED TO RIGHT */}
+              <div className="space-y-8 order-2 lg:order-2">
                 <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-sky-50 border border-sky-100 text-sky-700 text-xs font-bold uppercase tracking-wide">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
@@ -344,61 +399,6 @@ Total annualized waste: $240.
                   <div className="flex items-center"><TrendingUp size={16} className="mr-2 text-sky-600" /> Python Pipeline</div>
                   <div className="flex items-center"><CheckCircle2 size={16} className="mr-2 text-sky-600" /> 48hr Turnaround</div>
                 </div>
-              </div>
-
-              {/* HERO VISUAL: NEW DESIGN WITH FLOATING DATA POINTS */}
-              <div className="relative order-1 lg:order-2 flex justify-center items-center">
-                 {/* Animated Glow Ring */}
-                 <div className="absolute w-[500px] h-[500px] bg-sky-100 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-                 <div className="absolute w-[400px] h-[400px] bg-emerald-50 rounded-full blur-2xl opacity-40 animate-pulse delay-700"></div>
-                 
-                 {/* Main Photo Container with Orbiting Elements */}
-                 <div className="relative z-10">
-                   {/* Central Photo */}
-                   <div className="relative w-64 h-64 lg:w-80 lg:h-80 rounded-full p-2 bg-white shadow-2xl border-4 border-sky-50">
-                     <div className="w-full h-full rounded-full overflow-hidden relative">
-                        {/* PLEASE REPLACE THE SRC BELOW WITH 'image_186761.jpg' */}
-                       <img 
-                         src={`${process.env.PUBLIC_URL}/assets/photo.png`}
-                         alt="Rikith Reddy" 
-                         className="w-full h-full object-cover"
-                       />
-                       <div className="absolute inset-0 rounded-full border-[6px] border-sky-500/10 animate-[spin_12s_linear_infinite]"></div>
-                     </div>
-                   </div>
-
-                   {/* Floating Data Point 1: Anomaly (Top Left) */}
-                   <div className="absolute -top-4 -left-12 bg-white p-4 rounded-2xl shadow-lg border border-red-50 animate-[bounce_3s_infinite]">
-                     <div className="flex items-center space-x-3">
-                       <div className="p-2 bg-red-50 text-red-500 rounded-lg">
-                         <Activity size={20} />
-                       </div>
-                       <div>
-                         <div className="text-xs font-bold text-red-500 uppercase">Anomaly Detected</div>
-                         <div className="text-sm font-bold text-slate-800">$500 Duplicate</div>
-                       </div>
-                     </div>
-                   </div>
-
-                   {/* Floating Data Point 2: Savings (Bottom Right) */}
-                   <div className="absolute -bottom-8 -right-8 bg-white p-4 rounded-2xl shadow-lg border border-emerald-50 animate-[bounce_4s_infinite]">
-                     <div className="flex items-center space-x-3">
-                       <div className="p-2 bg-emerald-50 text-emerald-500 rounded-lg">
-                         <TrendingUp size={20} />
-                       </div>
-                       <div>
-                         <div className="text-xs font-bold text-emerald-500 uppercase">Potential Savings</div>
-                         <div className="text-sm font-bold text-slate-800">$240/yr Found</div>
-                       </div>
-                     </div>
-                   </div>
-
-                   {/* Floating Data Point 3: Security (Right) */}
-                   <div className="absolute top-1/4 -right-16 bg-white p-3 rounded-2xl shadow-md border border-sky-50 flex items-center space-x-2 animate-[pulse_5s_infinite]">
-                     <ShieldCheck size={16} className="text-sky-600" />
-                     <span className="text-xs font-bold text-sky-700">Secure & Private</span>
-                   </div>
-                 </div>
               </div>
             </div>
           </section>
