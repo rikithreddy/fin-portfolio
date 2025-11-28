@@ -2,7 +2,7 @@
 id: 1
 name: "Alop Gudhate"
 role: "Beta Client"
-photo: "https://randomuser.me/api/portraits/men/32.jpg"
+photo: "/assets/alop.png"
 linkedin: "https://www.linkedin.com/"
 highlight: "Pattern Recognition"
 rating: 5
