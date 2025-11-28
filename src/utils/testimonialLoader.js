@@ -1,20 +1,9 @@
 /**
- * Blog Loader Utility
+ * Testimonial Loader Utility
  *
- * Fetches and parses markdown blog posts from the public/blog directory.
+ * Fetches and parses markdown testimonials from the public/testimonials directory.
  * Each markdown file should have YAML frontmatter with metadata.
  */
-
-/**
- * Parse a date string like "Oct 12, 2023" into a Date object.
- *
- * @param {string} dateStr - Date string in format "Mon DD, YYYY"
- * @returns {Date} Parsed date object
- */
-function parseDate(dateStr) {
-  if (!dateStr) return new Date(0);
-  return new Date(dateStr);
-}
 
 /**
  * Parse YAML frontmatter from markdown content.
@@ -49,12 +38,8 @@ function parseFrontmatter(content) {
       value = value.slice(1, -1);
     }
 
-    // Parse tags as array (comma-separated)
-    if (key === 'tags' && typeof value === 'string') {
-      value = value.split(',').map(tag => tag.trim()).filter(tag => tag);
-    }
     // Parse numeric values
-    else if (!isNaN(value) && value !== '') {
+    if (!isNaN(value) && value !== '') {
       value = Number(value);
     }
 
@@ -65,18 +50,18 @@ function parseFrontmatter(content) {
 }
 
 /**
- * Fetch a single blog post by filename.
+ * Fetch a single testimonial by filename.
  * 
  * @param {string} filename - The markdown filename
- * @returns {Promise<Object|null>} Parsed blog post or null on error
+ * @returns {Promise<Object|null>} Parsed testimonial or null on error
  */
-async function fetchBlogPost(filename) {
+async function fetchTestimonial(filename) {
   try {
     const basePath = process.env.PUBLIC_URL || '';
-    const response = await fetch(`${basePath}/blog/${filename}`);
+    const response = await fetch(`${basePath}/testimonials/${filename}`);
     
     if (!response.ok) {
-      console.error(`Failed to fetch blog post: ${filename}`);
+      console.error(`Failed to fetch testimonial: ${filename}`);
       return null;
     }
     
@@ -85,45 +70,45 @@ async function fetchBlogPost(filename) {
     
     return {
       ...metadata,
-      content: content.trim(),
+      text: content.trim(),
       slug: filename.replace('.md', '')
     };
   } catch (error) {
-    console.error(`Error loading blog post ${filename}:`, error);
+    console.error(`Error loading testimonial ${filename}:`, error);
     return null;
   }
 }
 
 /**
- * Fetch all blog posts listed in the manifest.
+ * Fetch all testimonials listed in the manifest.
  * 
- * @returns {Promise<Array>} Array of parsed blog posts
+ * @returns {Promise<Array>} Array of parsed testimonials
  */
-export async function loadAllBlogs() {
+export async function loadAllTestimonials() {
   try {
     const basePath = process.env.PUBLIC_URL || '';
-    const manifestResponse = await fetch(`${basePath}/blog/manifest.json`);
+    const manifestResponse = await fetch(`${basePath}/testimonials/manifest.json`);
     
     if (!manifestResponse.ok) {
-      console.error('Failed to fetch blog manifest');
+      console.error('Failed to fetch testimonials manifest');
       return [];
     }
     
     const manifest = await manifestResponse.json();
-    const blogFilenames = manifest.blogs || [];
+    const testimonialFilenames = manifest.testimonials || [];
     
-    const blogPromises = blogFilenames.map(filename => fetchBlogPost(filename));
-    const blogs = await Promise.all(blogPromises);
+    const testimonialPromises = testimonialFilenames.map(filename => fetchTestimonial(filename));
+    const testimonials = await Promise.all(testimonialPromises);
 
-    // Filter out any failed fetches and sort by date (latest first)
-    return blogs
-      .filter(blog => blog !== null)
-      .sort((a, b) => parseDate(b.date) - parseDate(a.date));
+    // Filter out any failed fetches and sort by id
+    return testimonials
+      .filter(testimonial => testimonial !== null)
+      .sort((a, b) => (a.id || 0) - (b.id || 0));
   } catch (error) {
-    console.error('Error loading blogs:', error);
+    console.error('Error loading testimonials:', error);
     return [];
   }
 }
 
-export default loadAllBlogs;
+export default loadAllTestimonials;
 

@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Lock,
   ChevronLeft,
+  ChevronRight,
   ShieldCheck,
   Zap,
   Activity,
@@ -21,6 +22,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { loadAllBlogs } from './utils/blogLoader';
+import { loadAllTestimonials } from './utils/testimonialLoader';
 
 // Icon mapping for blog posts
 const ICON_MAP = {
@@ -151,10 +153,11 @@ const D3NetworkBackground = () => {
 
 /**
  * Helper function to get the icon component for a blog post.
+ * Icon inherits color from parent element via currentColor.
  */
-const getIconForBlog = (iconType, iconColor) => {
+const getIconForBlog = (iconType) => {
   const IconComponent = ICON_MAP[iconType] || Search;
-  return <IconComponent className={iconColor} size={24} />;
+  return <IconComponent size={24} />;
 };
 
 const Portfolio = () => {
@@ -163,6 +166,20 @@ const Portfolio = () => {
   const [selectedStory, setSelectedStory] = useState(null);
   const [stories, setStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // All blogs page state
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [sortOrder, setSortOrder] = useState('newest');
+
+  // Blog carousel state
+  const [blogCarouselIndex, setBlogCarouselIndex] = useState(0);
+  const carouselRef = useRef(null);
+
+  // Testimonials state
+  const [testimonials, setTestimonials] = useState([]);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [isTestimonialPaused, setIsTestimonialPaused] = useState(false);
 
   // Load blog posts from markdown files
   useEffect(() => {
@@ -173,7 +190,7 @@ const Portfolio = () => {
         // Transform blogs to include icon components
         const transformedBlogs = blogs.map(blog => ({
           ...blog,
-          icon: getIconForBlog(blog.iconType, blog.iconColor)
+          icon: getIconForBlog(blog.iconType)
         }));
         setStories(transformedBlogs);
       } catch (error) {
@@ -186,34 +203,36 @@ const Portfolio = () => {
     fetchBlogs();
   }, []);
 
+  // Load testimonials from markdown files
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const loadedTestimonials = await loadAllTestimonials();
+        setTestimonials(loadedTestimonials);
+      } catch (error) {
+        console.error('Failed to load testimonials:', error);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
+
+  // Auto-advance testimonial slideshow
+  useEffect(() => {
+    if (testimonials.length <= 1 || isTestimonialPaused) return;
+
+    const interval = setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [testimonials.length, isTestimonialPaused]);
+
   // THEME: CALM FINTECH
   // BG: White / Slate-50
   // TEXT: Slate-800 (Charcoal) for readability
   // PRIMARY ACCENT: Sky-600 (Trust Blue)
   // SECONDARY ACCENT: Emerald-500 (Growth/Money)
-
-  const testimonials = [
-    {
-      id: 1,
-      name: "Alop Gudhate",
-      role: "Beta Client",
-      // PLEASE REPLACE WITH ACTUAL PHOTO OF ALOP
-      photo: "https://randomuser.me/api/portraits/men/32.jpg",
-      linkedin: "https://www.linkedin.com/",
-      text: "The depth of analysis was startling. He didn't just show me a pie chart; he built a model that predicted my grocery inflation. Recovered lost money I didn't even know was missing.",
-      highlight: "Pattern Recognition"
-    },
-    {
-      id: 2,
-      name: "Ruchidnya Kadam",
-      role: "Beta Client",
-      // PLEASE REPLACE WITH ACTUAL PHOTO OF RUCHIDNYA
-      photo: "https://randomuser.me/api/portraits/women/44.jpg",
-      linkedin: "https://www.linkedin.com/",
-      text: "I treat my finances like a business now. Rikith's dashboard showed me exactly where my capital allocation was inefficient. Shifted funds to SIPs immediately.",
-      highlight: "Capital Allocation"
-    }
-  ];
 
   const goHome = () => {
     setSelectedStory(null);
@@ -221,11 +240,67 @@ const Portfolio = () => {
     window.scrollTo(0, 0);
   };
 
+  const goToAllBlogs = () => {
+    setSelectedStory(null);
+    setSelectedCategories([]);
+    setSelectedTags([]);
+    setSortOrder('newest');
+    setActiveView('all-blogs');
+    setIsMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const goToAllTestimonials = () => {
+    setActiveView('all-testimonials');
+    setIsMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  // Helper to truncate text with character limit
+  const truncateText = (text, maxLength = 250) => {
+    if (!text || text.length <= maxLength) return { text, isTruncated: false };
+    return { text: text.substring(0, maxLength).trim() + '...', isTruncated: true };
+  };
+
   const openStory = (story) => {
     setSelectedStory(story);
     setActiveView('blog');
     window.scrollTo(0, 0);
   };
+
+  // Get unique categories and tags from all stories
+  const categories = [...new Set(stories.map(s => s.category))];
+  const allTags = [...new Set(stories.flatMap(s => s.tags || []))];
+
+  // Toggle functions for multi-select
+  const toggleCategory = (cat) => {
+    setSelectedCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
+  const toggleTag = (tag) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setSelectedTags([]);
+  };
+
+  const hasActiveFilters = selectedCategories.length > 0 || selectedTags.length > 0;
+
+  // Filter and sort stories for all blogs page
+  const filteredStories = stories
+    .filter(story => selectedCategories.length === 0 || selectedCategories.includes(story.category))
+    .filter(story => selectedTags.length === 0 || (story.tags || []).some(tag => selectedTags.includes(tag)))
+    .sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
 
   const renderMarkdown = (text) => {
     return text.split('\n').map((line, i) => {
@@ -254,7 +329,7 @@ const Portfolio = () => {
 
           <div className="hidden md:flex items-center space-x-8">
             <button onClick={goHome} className="text-sm font-medium text-slate-600 hover:text-sky-600 transition">Home</button>
-            <a href="#stories" onClick={goHome} className="text-sm font-medium text-slate-600 hover:text-sky-600 transition">Blog</a>
+            <button onClick={goToAllBlogs} className="text-sm font-medium text-slate-600 hover:text-sky-600 transition">Blog</button>
             <a href="#testimonials" onClick={goHome} className="text-sm font-medium text-slate-600 hover:text-sky-600 transition">Testimonials</a>
             <a href="#privacy" onClick={goHome} className="text-sm font-medium text-slate-600 hover:text-sky-600 transition">Privacy</a>
             <a href="#contact" className="px-5 py-2.5 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-slate-800 transition shadow-lg shadow-slate-200">
@@ -272,7 +347,7 @@ const Portfolio = () => {
       {isMenuOpen && (
         <div className="fixed inset-0 z-40 bg-white pt-24 px-6 space-y-6 md:hidden">
           <button onClick={() => {goHome(); setIsMenuOpen(false)}} className="block text-xl font-medium text-slate-800">Home</button>
-          <a href="#stories" onClick={() => setIsMenuOpen(false)} className="block text-xl font-medium text-slate-800">Blog</a>
+          <button onClick={goToAllBlogs} className="block text-xl font-medium text-slate-800">Blog</button>
           <a href="#testimonials" onClick={() => setIsMenuOpen(false)} className="block text-xl font-medium text-slate-800">Testimonials</a>
           <a href="#contact" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center bg-sky-600 text-white font-bold rounded-xl">Get Analysis</a>
         </div>
@@ -379,97 +454,302 @@ const Portfolio = () => {
             </div>
           </section>
 
-          {/* BLOG GRID */}
+          {/* BLOG CAROUSEL */}
           <section id="stories" className="py-24 bg-white relative">
             <div className="max-w-7xl mx-auto px-6">
-              <div className="mb-16 text-center">
-                <h2 className="text-3xl font-bold text-slate-900 mb-4">Blog</h2>
-                <p className="text-slate-500 max-w-2xl mx-auto">
-                  Numbers are boring until you find the narrative. Here are real examples of insights I've found for my beta clients.
-                </p>
+              {/* Header with navigation arrows */}
+              <div className="mb-12 flex items-end justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold text-slate-900 mb-4">Blog</h2>
+                  <p className="text-slate-500 max-w-xl">
+                    Numbers are boring until you find the narrative. Here are real examples of insights I've found for my beta clients.
+                  </p>
+                </div>
+                {stories.length > 3 && (
+                  <div className="hidden md:flex items-center gap-2">
+                    <button
+                      onClick={() => setBlogCarouselIndex(Math.max(0, blogCarouselIndex - 1))}
+                      disabled={blogCarouselIndex === 0}
+                      className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button
+                      onClick={() => setBlogCarouselIndex(Math.min(Math.max(0, Math.min(stories.length, 10) - 3), blogCarouselIndex + 1))}
+                      disabled={blogCarouselIndex >= Math.max(0, Math.min(stories.length, 10) - 3)}
+                      className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="grid md:grid-cols-3 gap-8">
+              {/* Carousel container */}
+              <div className="relative overflow-hidden">
                 {isLoading ? (
-                  <div className="col-span-3 text-center py-12">
+                  <div className="text-center py-12">
                     <div className="inline-block w-8 h-8 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
                     <p className="mt-4 text-slate-500">Loading stories...</p>
                   </div>
                 ) : stories.length === 0 ? (
-                  <div className="col-span-3 text-center py-12">
+                  <div className="text-center py-12">
                     <p className="text-slate-500">No stories available.</p>
                   </div>
-                ) : stories.map((story, index) => (
-                  <div 
-                    key={story.id} 
-                    onClick={() => openStory(story)}
-                    className="group bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                ) : (
+                  <div
+                    ref={carouselRef}
+                    className="flex transition-transform duration-500 ease-out gap-6"
+                    style={{ transform: `translateX(-${blogCarouselIndex * (100 / 3 + 2)}%)` }}
                   >
-                    <div className="h-48 overflow-hidden relative">
-                      <img src={story.image} alt={story.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-slate-900">
-                        {String(index + 1).padStart(2, '0')}.
-                      </div>
-                    </div>
-                    <div className="p-8">
-                      <div className="flex justify-between items-start mb-6">
-                        <div className={`p-3 rounded-xl ${story.tagStyle.split(' ')[0]} ${story.tagStyle.split(' ')[1]}`}>
-                          {story.icon}
+                    {stories.slice(0, 10).map((story) => (
+                      <div
+                        key={story.id}
+                        onClick={() => openStory(story)}
+                        className="group flex-shrink-0 w-full md:w-[calc(33.333%-1rem)] bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer border border-slate-100/80"
+                      >
+                        {/* Image with gradient overlay */}
+                        <div className="h-44 overflow-hidden relative">
+                          <img src={story.image} alt={story.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                          <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
+                            <span className="text-white/90 text-xs font-medium">{story.date}</span>
+                            <span className="text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-md bg-white/20 text-white border border-white/20">
+                              {story.category}
+                            </span>
+                          </div>
                         </div>
-                        <span className={`text-xs font-bold px-2 py-1 rounded border ${story.tagStyle}`}>
-                          {story.category}
-                        </span>
-                      </div>
 
-                      <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-sky-600 transition">{story.title}</h3>
-                      <p className="text-slate-500 text-sm mb-6 leading-relaxed line-clamp-3">
-                        {story.preview}
-                      </p>
+                        {/* Content */}
+                        <div className="p-6">
+                          <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-sky-600 transition-colors leading-snug line-clamp-2">{story.title}</h3>
+                          <p className="text-slate-500 text-sm leading-relaxed line-clamp-2 mb-5">
+                            {story.preview}
+                          </p>
 
-                      <div className="flex items-center justify-between border-t border-slate-50 pt-4 mt-auto">
-                        <span className="text-slate-900 font-mono text-sm font-bold bg-slate-50 px-2 py-1 rounded">{story.metric}</span>
-                        <span className="flex items-center text-xs font-bold text-sky-600 group-hover:translate-x-1 transition">
-                          Read Story <ArrowRight size={14} className="ml-1" />
-                        </span>
+                          {/* Footer with metric and CTA */}
+                          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${story.tagStyle.split(' ').find(c => c.startsWith('bg-'))}`}></div>
+                              <span className="text-slate-800 font-mono text-sm font-semibold">{story.metric}</span>
+                            </div>
+                            <span className="flex items-center text-xs font-semibold text-sky-600 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                              Read <ArrowRight size={14} className="ml-1" />
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
+
+              {/* Dot indicators */}
+              {stories.length > 3 && (
+                <div className="flex justify-center items-center gap-2 mt-8">
+                  {Array.from({ length: Math.max(0, Math.min(stories.length, 10) - 2) }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setBlogCarouselIndex(idx)}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        blogCarouselIndex === idx
+                          ? 'bg-sky-600 w-6'
+                          : 'bg-slate-300 hover:bg-slate-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* View All Button */}
+              {stories.length > 3 && (
+                <div className="mt-10 text-center">
+                  <button
+                    onClick={goToAllBlogs}
+                    className="inline-flex items-center px-8 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition"
+                  >
+                    View All Posts
+                    <ArrowRight size={18} className="ml-2" />
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
-          {/* TESTIMONIALS */}
-          <section id="testimonials" className="py-24 bg-slate-50 border-y border-slate-200">
-            <div className="max-w-7xl mx-auto px-6">
-              <h2 className="text-3xl font-bold text-slate-900 text-center mb-16">What People Are Saying</h2>
-              <div className="grid md:grid-cols-2 gap-8">
-                {testimonials.map((t) => (
-                  <div key={t.id} className="bg-white p-10 rounded-2xl shadow-sm border border-slate-100 relative">
-                    <div className="absolute -top-5 -left-5 w-12 h-12 bg-sky-600 rounded-xl shadow-lg flex items-center justify-center text-white font-serif text-2xl">
-                      "
-                    </div>
-                    <p className="text-slate-600 italic mb-8 leading-relaxed text-lg">"{t.text}"</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <img src={t.photo} alt={t.name} className="w-12 h-12 rounded-full mr-4 border-2 border-white shadow-sm" />
-                        <div>
-                          <div className="font-bold text-slate-900 flex items-center">
-                            {t.name}
-                            <a href={t.linkedin} target="_blank" rel="noopener noreferrer" className="ml-2 text-sky-600 hover:text-sky-700">
-                              <Linkedin size={16} />
-                            </a>
+          {/* TESTIMONIALS SLIDESHOW */}
+          <section id="testimonials" className="py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }} />
+            </div>
+
+            <div className="max-w-4xl mx-auto px-6 relative">
+              {/* Header */}
+              <div className="text-center mb-12">
+                <p className="text-sky-400 text-sm font-semibold tracking-widest uppercase mb-3">Testimonials</p>
+                <h2 className="text-3xl md:text-4xl font-bold text-white">What Clients Are Saying</h2>
+              </div>
+
+              {/* Testimonial Card */}
+              {testimonials.length > 0 && (
+                <div
+                  className="relative"
+                  onMouseEnter={() => setIsTestimonialPaused(true)}
+                  onMouseLeave={() => setIsTestimonialPaused(false)}
+                >
+                  {/* Large quote icon */}
+                  <div className="absolute -top-4 left-8 md:left-12 text-sky-500/20 text-8xl font-serif select-none z-0">
+                    "
+                  </div>
+
+                  {/* Slide container */}
+                  <div className="relative overflow-hidden">
+                    <div
+                      className="flex transition-transform duration-700 ease-out"
+                      style={{ transform: `translateX(-${testimonialIndex * 100}%)` }}
+                    >
+                      {testimonials.map((t) => (
+                        <div
+                          key={t.id}
+                          className="w-full flex-shrink-0 px-4"
+                        >
+                          <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-white/10">
+                            {/* Quote text */}
+                            {(() => {
+                              const { text: displayText, isTruncated } = truncateText(t.text, 300);
+                              return (
+                                <div className="mb-10 relative z-10">
+                                  <p className="text-white/90 text-xl md:text-2xl leading-relaxed">
+                                    "{displayText}"
+                                  </p>
+                                  {isTruncated && (
+                                    <button
+                                      onClick={goToAllTestimonials}
+                                      className="mt-3 text-sky-400 hover:text-sky-300 text-sm font-medium transition inline-flex items-center gap-1"
+                                    >
+                                      Read full testimonial <ArrowRight size={14} />
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })()}
+
+                            {/* Author info */}
+                            <div className="flex items-center justify-between flex-wrap gap-4">
+                              <div className="flex items-center">
+                                <div className="relative">
+                                  <img
+                                    src={t.photo}
+                                    alt={t.name}
+                                    className="w-14 h-14 rounded-full object-cover border-2 border-sky-400/50 shadow-lg shadow-sky-500/20"
+                                  />
+                                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                                    <CheckCircle2 size={12} className="text-white" />
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="font-bold text-white flex items-center gap-2">
+                                    {t.name}
+                                    <a
+                                      href={t.linkedin}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-500/20 rounded text-sky-400 hover:text-sky-300 hover:bg-sky-500/30 transition text-xs font-medium"
+                                    >
+                                      <Linkedin size={12} /> LinkedIn
+                                    </a>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-sky-400 text-sm font-medium">{t.role}</span>
+                                    {t.date && (
+                                      <>
+                                        <span className="text-white/30">|</span>
+                                        <span className="text-white/50 text-xs">{t.date}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Highlight badge */}
+                              <div className="px-4 py-2 bg-sky-500/20 rounded-full border border-sky-400/30">
+                                <span className="text-sky-300 text-sm font-semibold">{t.highlight}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-xs text-sky-600 font-bold uppercase tracking-wide">{t.role}</div>
                         </div>
-                      </div>
-                      <div className="px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100 text-xs font-bold text-emerald-700">
-                        {t.highlight}
-                      </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Navigation */}
+                  {testimonials.length > 1 && (
+                    <div className="flex items-center justify-center gap-4 mt-8">
+                      {/* Previous button */}
+                      <button
+                        onClick={() => setTestimonialIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+                        className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+
+                      {/* Dots */}
+                      <div className="flex items-center gap-2">
+                        {testimonials.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setTestimonialIndex(idx)}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              testimonialIndex === idx
+                                ? 'w-8 bg-sky-400'
+                                : 'w-2 bg-white/30 hover:bg-white/50'
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Next button */}
+                      <button
+                        onClick={() => setTestimonialIndex((prev) => (prev + 1) % testimonials.length)}
+                        className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Auto-play indicator */}
+                  {testimonials.length > 1 && (
+                    <div className="flex justify-center mt-4">
+                      <span className="text-white/40 text-xs">
+                        {isTestimonialPaused ? 'Paused' : 'Auto-playing'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Empty state */}
+              {testimonials.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-white/50">Loading testimonials...</p>
+                </div>
+              )}
+
+              {/* View All Button */}
+              {testimonials.length > 0 && (
+                <div className="flex justify-center mt-10">
+                  <button
+                    onClick={goToAllTestimonials}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white font-medium transition-all hover:scale-105"
+                  >
+                    View All Testimonials
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
@@ -542,10 +822,279 @@ const Portfolio = () => {
              </div>
           </section>
         </>
+      ) : activeView === 'all-blogs' ? (
+        /* ALL BLOGS VIEW */
+        <div className="pt-28 pb-20 max-w-7xl mx-auto px-6">
+          <button onClick={goHome} className="inline-flex items-center text-sm text-slate-400 hover:text-sky-600 transition mb-8 group font-medium">
+            <ChevronLeft size={18} className="mr-1 group-hover:-translate-x-1 transition" /> Back Home
+          </button>
+
+          <div className="flex flex-col lg:flex-row gap-12">
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
+                <div>
+                  <h1 className="text-4xl font-bold text-slate-900 mb-2">All Blog Posts</h1>
+                  <p className="text-slate-400">
+                    <span className="text-sky-600 font-semibold">{filteredStories.length}</span> {filteredStories.length === 1 ? 'post' : 'posts'}
+                    {hasActiveFilters && <span className="text-slate-300"> (filtered)</span>}
+                  </p>
+                </div>
+                {hasActiveFilters && (
+                  <span className="bg-sky-50 text-sky-700 px-3 py-1.5 rounded-full text-xs font-medium">
+                    {selectedCategories.length + selectedTags.length} filter{selectedCategories.length + selectedTags.length > 1 ? 's' : ''} active
+                  </span>
+                )}
+              </div>
+
+              {/* Blog Grid */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {filteredStories.map((story) => (
+                  <div
+                    key={story.id}
+                    onClick={() => openStory(story)}
+                    className="group cursor-pointer bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300"
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img src={story.image} alt={story.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition" />
+                      <div className={`absolute top-4 left-4 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-white/90 backdrop-blur-sm shadow-sm ${story.tagStyle.split(' ').filter(c => c.startsWith('text-')).join(' ')}`}>
+                        {story.category}
+                      </div>
+                    </div>
+                    <div className="p-5 flex flex-col">
+                      <div className="flex items-center gap-2 text-slate-400 text-xs mb-3">
+                        <span>{story.date}</span>
+                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                        <span className="font-mono font-semibold text-slate-600">{story.metric}</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-sky-600 transition line-clamp-2">
+                        {story.title}
+                      </h3>
+                      <p className="text-slate-500 text-sm leading-relaxed line-clamp-2 mb-4">
+                        {story.preview}
+                      </p>
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">R</div>
+                          <span className="text-xs text-slate-400">Rikith Reddy</span>
+                        </div>
+                        <span className="flex items-center text-xs font-semibold text-sky-600 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all">
+                          Read more <ArrowRight size={14} className="ml-1" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {filteredStories.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="text-slate-500 text-lg">No posts match your filters.</p>
+                  <button
+                    onClick={clearFilters}
+                    className="mt-4 text-sky-600 font-medium hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <aside className="lg:w-72 flex-shrink-0">
+              <div className="lg:sticky lg:top-28 bg-gradient-to-b from-slate-50 to-white rounded-2xl border border-slate-100 p-6">
+                {/* Sort */}
+                <div className="mb-6">
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Sort by</h3>
+                  <div className="inline-flex bg-slate-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setSortOrder('newest')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                        sortOrder === 'newest'
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      Newest
+                    </button>
+                    <button
+                      onClick={() => setSortOrder('oldest')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                        sortOrder === 'oldest'
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      Oldest
+                    </button>
+                  </div>
+                </div>
+
+                <div className="h-px bg-slate-200 mb-6" />
+
+                {/* Categories */}
+                <div className="mb-6">
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Category</h3>
+                  <div className="space-y-1">
+                    {categories.map(cat => {
+                      const count = stories.filter(s => s.category === cat).length;
+                      const isSelected = selectedCategories.includes(cat);
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => toggleCategory(cat)}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition ${
+                            isSelected
+                              ? 'bg-sky-50 text-sky-700 border border-sky-100'
+                              : 'text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-sky-500' : 'bg-slate-300'}`} />
+                            {cat}
+                          </span>
+                          <span className={`text-xs ${isSelected ? 'text-sky-500' : 'text-slate-400'}`}>{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="h-px bg-slate-200 mb-6" />
+
+                {/* Tags */}
+                {allTags.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Tags</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {allTags.map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => toggleTag(tag)}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium transition border ${
+                            selectedTags.includes(tag)
+                              ? 'bg-sky-500 text-white border-sky-500'
+                              : 'bg-white text-slate-500 border-slate-200 hover:border-sky-300 hover:text-sky-600'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Clear Filters */}
+                {hasActiveFilters && (
+                  <>
+                    <div className="h-px bg-slate-200 my-6" />
+                    <button
+                      onClick={clearFilters}
+                      className="w-full py-2 text-sm font-medium text-slate-500 hover:text-red-500 transition flex items-center justify-center gap-2"
+                    >
+                      <X size={14} />
+                      Clear all filters
+                    </button>
+                  </>
+                )}
+              </div>
+            </aside>
+          </div>
+        </div>
+      ) : activeView === 'all-testimonials' ? (
+        /* ALL TESTIMONIALS VIEW */
+        <div className="pt-28 pb-20 min-h-screen bg-gradient-to-br from-slate-50 to-white">
+          <div className="max-w-5xl mx-auto px-6">
+            <button onClick={goHome} className="inline-flex items-center text-sm text-slate-400 hover:text-sky-600 transition mb-8 group font-medium">
+              <ChevronLeft size={18} className="mr-1 group-hover:-translate-x-1 transition" /> Back Home
+            </button>
+
+            <div className="text-center mb-12">
+              <p className="text-sky-600 text-sm font-semibold tracking-widest uppercase mb-3">Testimonials</p>
+              <h1 className="text-4xl font-bold text-slate-900 mb-4">What Clients Are Saying</h1>
+              <p className="text-slate-500 max-w-2xl mx-auto">
+                Read the full stories from clients who have experienced the power of data-driven financial analysis.
+              </p>
+            </div>
+
+            <div className="space-y-8">
+              {testimonials.map((t) => (
+                <div
+                  key={t.id}
+                  className="bg-white rounded-3xl p-8 md:p-10 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative"
+                >
+                  {/* Quote mark */}
+                  <div className="absolute -top-4 left-8 text-sky-100 text-7xl font-serif select-none">
+                    "
+                  </div>
+
+                  {/* Full testimonial text with preserved line breaks */}
+                  <div className="relative z-10 mb-8">
+                    {t.text.split('\n').filter(line => line.trim()).map((paragraph, idx) => (
+                      <p key={idx} className="text-slate-600 text-lg leading-relaxed mb-4 last:mb-0">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+
+                  {/* Author info */}
+                  <div className="flex items-center justify-between flex-wrap gap-4 pt-6 border-t border-slate-100">
+                    <div className="flex items-center">
+                      <div className="relative">
+                        <img
+                          src={t.photo}
+                          alt={t.name}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md"
+                        />
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                          <CheckCircle2 size={12} className="text-white" />
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div className="font-bold text-slate-900 flex items-center gap-2">
+                          {t.name}
+                          <a
+                            href={t.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-50 border border-sky-100 rounded text-sky-600 hover:text-sky-700 hover:bg-sky-100 transition text-xs font-medium"
+                          >
+                            <Linkedin size={12} /> LinkedIn
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-sky-600 text-sm font-medium">{t.role}</span>
+                          {t.date && (
+                            <>
+                              <span className="text-slate-300">|</span>
+                              <span className="text-slate-400 text-xs">{t.date}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Highlight badge */}
+                    <div className="px-4 py-2 bg-sky-50 rounded-full border border-sky-100">
+                      <span className="text-sky-700 text-sm font-semibold">{t.highlight}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {testimonials.length === 0 && (
+              <div className="text-center py-16">
+                <p className="text-slate-500">Loading testimonials...</p>
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
         /* BLOG READER VIEW */
         <div className="pt-28 pb-20 max-w-3xl mx-auto px-6">
-           <button onClick={goHome} className="flex items-center text-slate-500 hover:text-sky-600 transition mb-8 group font-medium">
+           <button onClick={goToAllBlogs} className="flex items-center text-slate-500 hover:text-sky-600 transition mb-8 group font-medium">
               <ChevronLeft size={20} className="mr-2 group-hover:-translate-x-1 transition" /> Back to Blog
            </button>
 
