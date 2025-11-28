@@ -308,6 +308,60 @@ const Portfolio = () => {
     });
   };
 
+  // Add structured data for services
+  useEffect(() => {
+    const serviceSchema = {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "Financial Data Analysis Services",
+      "provider": {
+        "@type": "Person",
+        "name": "Rikith Reddy"
+      },
+      "serviceType": "Financial Analysis",
+      "areaServed": "Global",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Financial Analysis Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Spending Pattern Analysis",
+              "description": "Comprehensive analysis of spending patterns and financial behavior"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Financial Anomaly Detection",
+              "description": "Identification of unusual transactions and potential financial issues"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Capital Allocation Optimization",
+              "description": "Strategic recommendations for optimal money allocation and investment"
+            }
+          }
+        ]
+      }
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(serviceSchema);
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-sky-100 selection:text-sky-900">
       
@@ -638,7 +692,7 @@ const Portfolio = () => {
                               <div className="flex items-center">
                                 <div className="relative">
                                   <img
-                                    src={t.photo}
+                                    src={`${process.env.PUBLIC_URL}${t.photo}`}
                                     alt={t.name}
                                     className="w-14 h-14 rounded-full object-cover border-2 border-sky-400/50 shadow-lg shadow-sky-500/20"
                                   />
@@ -1040,7 +1094,7 @@ const Portfolio = () => {
                     <div className="flex items-center">
                       <div className="relative">
                         <img
-                          src={t.photo}
+                          src={`${process.env.PUBLIC_URL}${t.photo}`}
                           alt={t.name}
                           className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md"
                         />
