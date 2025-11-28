@@ -50,37 +50,29 @@ function parseFrontmatter(content) {
 }
 
 /**
- * Get the base path for public assets.
- * Works both in development and production (GitHub Pages subdirectory).
- *
- * @returns {string} The base path
+ * GitHub raw content base URL for fetching files with CORS support.
  */
-function getBasePath() {
-  // process.env.PUBLIC_URL is replaced at build time by Create React App
-  // It will be '/fin-portfolio' for GitHub Pages deployment
-  return process.env.PUBLIC_URL || '';
-}
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/rikithreddy/fin-portfolio/master/public';
 
 /**
- * Fetch a single testimonial by filename.
+ * Fetch a single testimonial by filename from GitHub raw content.
  *
  * @param {string} filename - The markdown filename
  * @returns {Promise<Object|null>} Parsed testimonial or null on error
  */
 async function fetchTestimonial(filename) {
   try {
-    const basePath = getBasePath();
-    const url = `${basePath}/testimonials/${filename}`;
+    const url = `${GITHUB_RAW_BASE}/testimonials/${filename}`;
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       console.error(`Failed to fetch testimonial: ${filename}`);
       return null;
     }
-    
+
     const rawContent = await response.text();
     const { metadata, content } = parseFrontmatter(rawContent);
-    
+
     return {
       ...metadata,
       text: content.trim(),
@@ -93,24 +85,23 @@ async function fetchTestimonial(filename) {
 }
 
 /**
- * Fetch all testimonials listed in the manifest.
- * 
+ * Fetch all testimonials listed in the manifest from GitHub raw content.
+ *
  * @returns {Promise<Array>} Array of parsed testimonials
  */
 export async function loadAllTestimonials() {
   try {
-    const basePath = getBasePath();
-    const url = `${basePath}/testimonials/manifest.json`;
+    const url = `${GITHUB_RAW_BASE}/testimonials/manifest.json`;
     const manifestResponse = await fetch(url);
-    
+
     if (!manifestResponse.ok) {
       console.error('Failed to fetch testimonials manifest');
       return [];
     }
-    
+
     const manifest = await manifestResponse.json();
     const testimonialFilenames = manifest.testimonials || [];
-    
+
     const testimonialPromises = testimonialFilenames.map(filename => fetchTestimonial(filename));
     const testimonials = await Promise.all(testimonialPromises);
 

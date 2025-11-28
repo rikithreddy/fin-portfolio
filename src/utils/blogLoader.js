@@ -65,37 +65,29 @@ function parseFrontmatter(content) {
 }
 
 /**
- * Get the base path for public assets.
- * Works both in development and production (GitHub Pages subdirectory).
- *
- * @returns {string} The base path
+ * GitHub raw content base URL for fetching files with CORS support.
  */
-function getBasePath() {
-  // process.env.PUBLIC_URL is replaced at build time by Create React App
-  // It will be '/fin-portfolio' for GitHub Pages deployment
-  return process.env.PUBLIC_URL || '';
-}
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/rikithreddy/fin-portfolio/master/public';
 
 /**
- * Fetch a single blog post by filename.
+ * Fetch a single blog post by filename from GitHub raw content.
  *
  * @param {string} filename - The markdown filename
  * @returns {Promise<Object|null>} Parsed blog post or null on error
  */
 async function fetchBlogPost(filename) {
   try {
-    const basePath = getBasePath();
-    const url = `${basePath}/blog/${filename}`;
+    const url = `${GITHUB_RAW_BASE}/blog/${filename}`;
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       console.error(`Failed to fetch blog post: ${filename}`);
       return null;
     }
-    
+
     const rawContent = await response.text();
     const { metadata, content } = parseFrontmatter(rawContent);
-    
+
     return {
       ...metadata,
       content: content.trim(),
@@ -108,24 +100,23 @@ async function fetchBlogPost(filename) {
 }
 
 /**
- * Fetch all blog posts listed in the manifest.
- * 
+ * Fetch all blog posts listed in the manifest from GitHub raw content.
+ *
  * @returns {Promise<Array>} Array of parsed blog posts
  */
 export async function loadAllBlogs() {
   try {
-    const basePath = getBasePath();
-    const url = `${basePath}/blog/manifest.json`;
+    const url = `${GITHUB_RAW_BASE}/blog/manifest.json`;
     const manifestResponse = await fetch(url);
-    
+
     if (!manifestResponse.ok) {
       console.error('Failed to fetch blog manifest');
       return [];
     }
-    
+
     const manifest = await manifestResponse.json();
     const blogFilenames = manifest.blogs || [];
-    
+
     const blogPromises = blogFilenames.map(filename => fetchBlogPost(filename));
     const blogs = await Promise.all(blogPromises);
 
