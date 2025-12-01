@@ -66,10 +66,10 @@ function parseFrontmatter(content) {
 
 /**
  * Get the base URL for fetching blog content.
- * Uses process.env.PUBLIC_URL which works for both local dev and production.
+ * Always use GitHub raw content for reliability.
  */
 function getBlogBaseUrl() {
-  return process.env.PUBLIC_URL || '';
+  return 'https://raw.githubusercontent.com/rikithreddy/fin-portfolio/master/public';
 }
 
 /**
@@ -82,6 +82,7 @@ async function fetchBlogPost(filename) {
   try {
     const baseUrl = getBlogBaseUrl();
     const url = `${baseUrl}/blog/${filename}`;
+    console.log('Fetching blog from:', url);
     const response = await fetch(url);
 
     if (!response.ok) {

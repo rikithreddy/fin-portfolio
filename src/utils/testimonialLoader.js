@@ -50,19 +50,20 @@ function parseFrontmatter(content) {
 }
 
 /**
- * GitHub raw content base URL for fetching files with CORS support.
+ * Get the base URL for fetching testimonial content.
+ * Always use GitHub raw content for reliability.
  */
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/rikithreddy/fin-portfolio/master/public';
+function getTestimonialBaseUrl() {
+  return 'https://raw.githubusercontent.com/rikithreddy/fin-portfolio/master/public';
+}
 
 /**
- * Fetch a single testimonial by filename from GitHub raw content.
- *
- * @param {string} filename - The markdown filename
- * @returns {Promise<Object|null>} Parsed testimonial or null on error
+ * Fetch a single testimonial by filename.
  */
 async function fetchTestimonial(filename) {
   try {
-    const url = `${GITHUB_RAW_BASE}/testimonials/${filename}`;
+    const baseUrl = getTestimonialBaseUrl();
+    const url = `${baseUrl}/testimonials/${filename}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -85,13 +86,12 @@ async function fetchTestimonial(filename) {
 }
 
 /**
- * Fetch all testimonials listed in the manifest from GitHub raw content.
- *
- * @returns {Promise<Array>} Array of parsed testimonials
+ * Fetch all testimonials listed in the manifest.
  */
 export async function loadAllTestimonials() {
   try {
-    const url = `${GITHUB_RAW_BASE}/testimonials/manifest.json`;
+    const baseUrl = getTestimonialBaseUrl();
+    const url = `${baseUrl}/testimonials/manifest.json`;
     const manifestResponse = await fetch(url);
 
     if (!manifestResponse.ok) {
@@ -105,7 +105,6 @@ export async function loadAllTestimonials() {
     const testimonialPromises = testimonialFilenames.map(filename => fetchTestimonial(filename));
     const testimonials = await Promise.all(testimonialPromises);
 
-    // Filter out any failed fetches and sort by id
     return testimonials
       .filter(testimonial => testimonial !== null)
       .sort((a, b) => (a.id || 0) - (b.id || 0));
