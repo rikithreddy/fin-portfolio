@@ -21,7 +21,7 @@ To explain this to my clients, I often show them this analysis of coffee shop sa
 
 First, look at the daily pattern of spending. Most people think they have a steady leak of money throughout the day. They don't.
 
-![Line chart showing sales peaks at 8 AM and 4 PM](image_699a18.png)
+![Line chart showing sales peaks at 8 AM and 4 PM](https://raw.githubusercontent.com/rikithreddy/rikithreddy.github.io/master/public/assets/1-coffee/img1.jpeg)
 
 There are two clear danger zones:
 1.  **The Morning Rush:** This is predictable. You need to wake up.
@@ -31,7 +31,7 @@ There are two clear danger zones:
 
 As a financial consultant, my job is to find out *why* that second peak happens. If we look deeper at what people are actually buying, the story changes completely.
 
-![Chart showing the shift from caffeine to sweet treats](image_6999f2.jpg)
+![Chart showing the shift from caffeine to sweet treats](https://raw.githubusercontent.com/rikithreddy/rikithreddy.github.io/master/public/assets/1-coffee/img2.jpeg)
 
 In the morning (the blue area), people are buying "Fuel." They are buying energy to start their work. This is a **Functional Expense**. It's hard to cut this because it serves a purpose.
 
@@ -41,7 +41,7 @@ But look at what happens after 4 PM (the orange area). The "Fuel" disappears. It
 
 Here is the most critical insight for your wallet.
 
-![Bar chart comparing the 62% flip in behavior](image_6999d5.png)
+![Bar chart comparing the 62% flip in behavior](https://raw.githubusercontent.com/rikithreddy/rikithreddy.github.io/master/public/assets/1-coffee/img3.jpeg)
 
 * **Before Noon:** 62% of money is spent on **Energy**.
 * **After 4 PM:** 62% of money is spent on **Comfort**.

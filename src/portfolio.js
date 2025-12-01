@@ -301,12 +301,171 @@ const Portfolio = () => {
     });
 
   const renderMarkdown = (text) => {
-    return text.split('\n').map((line, i) => {
-      if (line.startsWith('# ')) return <h1 key={i} className="text-3xl font-bold text-slate-800 mt-8 mb-4 tracking-tight">{line.replace('# ', '')}</h1>;
-      if (line.startsWith('## ')) return <h2 key={i} className="text-xl font-semibold text-sky-700 mt-6 mb-3">{line.replace('## ', '')}</h2>;
-      if (line.startsWith('**')) return <div key={i} className="p-4 border-l-4 border-sky-500 bg-sky-50 my-4 text-slate-700 italic">{line.replace(/\*\*/g, '')}</div>;
-      return <p key={i} className="text-slate-600 mb-4 leading-relaxed">{line}</p>;
-    });
+    // Helper to parse inline markdown (bold, italic, links, inline code)
+    const parseInline = (str) => {
+      const parts = [];
+      let remaining = str;
+      let keyIndex = 0;
+
+      while (remaining.length > 0) {
+        // Bold: **text**
+        const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+        // Italic: *text*
+        const italicMatch = remaining.match(/(?<!\*)\*([^*]+)\*(?!\*)/);
+        // Image: ![alt](url)
+        const imageMatch = remaining.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+        // Link: [text](url)
+        const linkMatch = remaining.match(/(?<!!)\[([^\]]+)\]\(([^)]+)\)/);
+        // Inline code: `code`
+        const codeMatch = remaining.match(/`([^`]+)`/);
+
+        // Find the earliest match
+        const matches = [
+          { type: 'bold', match: boldMatch },
+          { type: 'italic', match: italicMatch },
+          { type: 'image', match: imageMatch },
+          { type: 'link', match: linkMatch },
+          { type: 'code', match: codeMatch }
+        ].filter(m => m.match).sort((a, b) => a.match.index - b.match.index);
+
+        if (matches.length === 0) {
+          parts.push(remaining);
+          break;
+        }
+
+        const earliest = matches[0];
+        const before = remaining.slice(0, earliest.match.index);
+        if (before) parts.push(before);
+
+        if (earliest.type === 'bold') {
+          parts.push(<strong key={keyIndex++} className="font-semibold text-slate-900">{earliest.match[1]}</strong>);
+        } else if (earliest.type === 'italic') {
+          parts.push(<em key={keyIndex++} className="italic text-slate-700">{earliest.match[1]}</em>);
+        } else if (earliest.type === 'image') {
+          parts.push(
+            <img
+              key={keyIndex++}
+              src={earliest.match[2]}
+              alt={earliest.match[1]}
+              className="rounded-2xl my-8 w-full shadow-xl shadow-slate-200/50 border border-slate-100"
+            />
+          );
+        } else if (earliest.type === 'link') {
+          parts.push(
+            <a key={keyIndex++} href={earliest.match[2]} className="text-sky-600 hover:text-sky-700 underline decoration-sky-200 hover:decoration-sky-400 transition-colors" target="_blank" rel="noopener noreferrer">
+              {earliest.match[1]}
+            </a>
+          );
+        } else if (earliest.type === 'code') {
+          parts.push(<code key={keyIndex++} className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded-md text-sm font-mono border border-sky-100">{earliest.match[1]}</code>);
+        }
+
+        remaining = remaining.slice(earliest.match.index + earliest.match[0].length);
+      }
+
+      return parts.length === 1 && typeof parts[0] === 'string' ? parts[0] : parts;
+    };
+
+    const lines = text.split('\n');
+    const elements = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Empty line
+      if (line.trim() === '') {
+        i++;
+        continue;
+      }
+
+      // H1: # heading
+      if (line.startsWith('# ')) {
+        elements.push(<h1 key={i} className="text-3xl font-bold text-slate-900 mt-10 mb-4 tracking-tight">{parseInline(line.slice(2))}</h1>);
+        i++;
+        continue;
+      }
+
+      // H2: ## heading
+      if (line.startsWith('## ')) {
+        elements.push(<h2 key={i} className="text-2xl font-bold text-slate-900 mt-8 mb-4">{parseInline(line.slice(3))}</h2>);
+        i++;
+        continue;
+      }
+
+      // H3: ### heading
+      if (line.startsWith('### ')) {
+        elements.push(<h3 key={i} className="text-xl font-semibold text-sky-700 mt-6 mb-3">{parseInline(line.slice(4))}</h3>);
+        i++;
+        continue;
+      }
+
+      // Blockquote: > text
+      if (line.startsWith('> ')) {
+        elements.push(<blockquote key={i} className="p-5 border-l-4 border-sky-500 bg-sky-50/50 my-6 text-slate-700 italic rounded-r-xl">{parseInline(line.slice(2))}</blockquote>);
+        i++;
+        continue;
+      }
+
+      // Image on its own line: ![alt](url)
+      const imageLineMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      if (imageLineMatch) {
+        elements.push(
+          <figure key={i} className="my-8">
+            <img src={imageLineMatch[2]} alt={imageLineMatch[1]} className="rounded-2xl w-full shadow-xl shadow-slate-200/50 border border-slate-100" />
+            {imageLineMatch[1] && <figcaption className="text-center text-sm text-slate-500 mt-3 italic">{imageLineMatch[1]}</figcaption>}
+          </figure>
+        );
+        i++;
+        continue;
+      }
+
+      // Unordered list: - item or * item
+      if (line.match(/^[\-\*]\s+/)) {
+        const listItems = [];
+        while (i < lines.length && lines[i].match(/^[\-\*]\s+/)) {
+          listItems.push(<li key={i} className="mb-2 pl-2">{parseInline(lines[i].replace(/^[\-\*]\s+/, ''))}</li>);
+          i++;
+        }
+        elements.push(<ul key={`ul-${i}`} className="list-none my-6 space-y-1 text-slate-600">{listItems.map((item, idx) => (
+          <li key={idx} className="flex items-start gap-3">
+            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-sky-500 flex-shrink-0"></span>
+            <span>{item.props.children}</span>
+          </li>
+        ))}</ul>);
+        continue;
+      }
+
+      // Ordered list: 1. item
+      if (line.match(/^\d+\.\s+/)) {
+        const listItems = [];
+        let num = 1;
+        while (i < lines.length && lines[i].match(/^\d+\.\s+/)) {
+          listItems.push({ num: num++, content: parseInline(lines[i].replace(/^\d+\.\s+/, '')) });
+          i++;
+        }
+        elements.push(<ol key={`ol-${i}`} className="list-none my-6 space-y-3 text-slate-600">{listItems.map((item, idx) => (
+          <li key={idx} className="flex items-start gap-4">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold">{item.num}</span>
+            <span className="pt-0.5">{item.content}</span>
+          </li>
+        ))}</ol>);
+        continue;
+      }
+
+      // Horizontal rule: --- or ***
+      if (line.match(/^(\-{3,}|\*{3,})$/)) {
+        elements.push(<hr key={i} className="my-10 border-slate-200" />);
+        i++;
+        continue;
+      }
+
+      // Regular paragraph
+      elements.push(<p key={i} className="text-slate-600 mb-5 leading-relaxed text-lg">{parseInline(line)}</p>);
+      i++;
+    }
+
+    return elements;
   };
 
   // Add structured data for services

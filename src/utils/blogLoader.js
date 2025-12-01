@@ -65,19 +65,23 @@ function parseFrontmatter(content) {
 }
 
 /**
- * GitHub raw content base URL for fetching files with CORS support.
+ * Get the base URL for fetching blog content.
+ * Uses process.env.PUBLIC_URL which works for both local dev and production.
  */
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/rikithreddy/fin-portfolio/master/public';
+function getBlogBaseUrl() {
+  return process.env.PUBLIC_URL || '';
+}
 
 /**
- * Fetch a single blog post by filename from GitHub raw content.
+ * Fetch a single blog post by filename.
  *
  * @param {string} filename - The markdown filename
  * @returns {Promise<Object|null>} Parsed blog post or null on error
  */
 async function fetchBlogPost(filename) {
   try {
-    const url = `${GITHUB_RAW_BASE}/blog/${filename}`;
+    const baseUrl = getBlogBaseUrl();
+    const url = `${baseUrl}/blog/${filename}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -100,13 +104,14 @@ async function fetchBlogPost(filename) {
 }
 
 /**
- * Fetch all blog posts listed in the manifest from GitHub raw content.
+ * Fetch all blog posts listed in the manifest.
  *
  * @returns {Promise<Array>} Array of parsed blog posts
  */
 export async function loadAllBlogs() {
   try {
-    const url = `${GITHUB_RAW_BASE}/blog/manifest.json`;
+    const baseUrl = getBlogBaseUrl();
+    const url = `${baseUrl}/blog/manifest.json`;
     console.log('Fetching manifest from:', url);
     const manifestResponse = await fetch(url);
 
