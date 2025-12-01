@@ -107,6 +107,7 @@ async function fetchBlogPost(filename) {
 export async function loadAllBlogs() {
   try {
     const url = `${GITHUB_RAW_BASE}/blog/manifest.json`;
+    console.log('Fetching manifest from:', url);
     const manifestResponse = await fetch(url);
 
     if (!manifestResponse.ok) {
@@ -115,15 +116,20 @@ export async function loadAllBlogs() {
     }
 
     const manifest = await manifestResponse.json();
-    const blogFilenames = manifest.blogs || [];
+    console.log('Manifest loaded:', manifest);
 
-    const blogPromises = blogFilenames.map(filename => fetchBlogPost(filename));
+    const blogPromises = manifest.blogs.map(filename => {
+      console.log('Loading blog:', filename);
+      return fetchBlogPost(filename);
+    });
+
     const blogs = await Promise.all(blogPromises);
-
-    // Filter out any failed fetches and sort by date (latest first)
-    return blogs
-      .filter(blog => blog !== null)
-      .sort((a, b) => parseDate(b.date) - parseDate(a.date));
+    const validBlogs = blogs.filter(blog => blog !== null);
+    
+    console.log('Loaded blogs:', validBlogs.length, 'out of', manifest.blogs.length);
+    
+    // Sort by date (newest first)
+    return validBlogs.sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch (error) {
     console.error('Error loading blogs:', error);
     return [];

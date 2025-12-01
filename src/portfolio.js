@@ -30,7 +30,8 @@ const ICON_MAP = {
   barchart: BarChart3,
   trendingup: TrendingUp,
   user: User,
-  filetext: FileText
+  filetext: FileText,
+  brain: Activity // Using Activity icon for brain
 };
 
 // --- D3.js Helper for React ---
@@ -440,7 +441,7 @@ const Portfolio = () => {
                        </div>
                        <div>
                          <div className="text-xs font-bold text-red-500 uppercase">Anomaly Detected</div>
-                         <div className="text-sm font-bold text-slate-800">$500 Duplicate</div>
+                         <div className="text-sm font-bold text-slate-800">₹50k Duplicate</div>
                        </div>
                      </div>
                    </div>
@@ -453,7 +454,7 @@ const Portfolio = () => {
                        </div>
                        <div>
                          <div className="text-xs font-bold text-emerald-500 uppercase">Potential Savings</div>
-                         <div className="text-sm font-bold text-slate-800">$240/yr Found</div>
+                         <div className="text-sm font-bold text-slate-800">₹ 1lakh/yr Found</div>
                        </div>
                      </div>
                    </div>
